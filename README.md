@@ -29,5 +29,3 @@ You can go to https://developer.redhat.com and create a new account, just for us
 ## Is the script idempotent?
 Yes. You can run it several times and it will not cause duplicate issues. This is because the 'GH Pull Request'' field is used to detect an existing imported issue.
 
-## Can the script be run via a GitHub action?
-Yes! There is all the code and config needed here to run this as a GitHub action. However, it's not yet documented. Also, the code might be stale, as I ended up just runnign this on demand at key points in the Quarkus productisation process. 
