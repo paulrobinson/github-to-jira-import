@@ -1,11 +1,13 @@
 //usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS info.picocli:picocli:4.2.0, org.kohsuke:github-api:1.112, com.atlassian.jira:jira-rest-java-client-api:3.0.0, com.atlassian.jira:jira-rest-java-client-core:3.0.0, org.json:json:20200518, com.konghq:unirest-java:3.7.04
+//DEPS info.picocli:picocli:4.2.0, org.kohsuke:github-api:1.112, com.atlassian.jira:jira-rest-java-client-api:5.2.2, com.atlassian.jira:jira-rest-java-client-app:5.2.2, org.json:json:20200518, com.konghq:unirest-java:3.7.04
 
+//REPOS mavencentral,atlassian=https://packages.atlassian.com/maven/repository/public
+
+import com.atlassian.httpclient.api.Request;
+import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
@@ -33,16 +35,13 @@ import java.util.concurrent.Callable;
         description = "GitHub to Jira issue replicator")
 class run implements Callable<Integer> {
 
-    @CommandLine.Option(names = {"-j", "--jira-server"}, description = "The JIRA server to connect to", required = true)
+    @CommandLine.Option(names = {"-j", "--jira-token"}, description = "The Personal Access Token for authenticating with the JIRA server", required = true)
+    private String jiraToken;
+
+    @CommandLine.Option(names = {"-s", "--jira-server"}, description = "The JIRA server to connect to", required = true)
     private String jiraServerURL;
 
-    @CommandLine.Option(names = {"-u", "--username"}, description = "The username to use when connecting to the JIRA server", required = true)
-    private String jiraUsername;
-
-    @CommandLine.Option(names = {"-p", "--password"}, description = "The password to use when connecting to the JIRA server", required = true)
-    private String jiraPassword;
-
-    @CommandLine.Option(names = {"-t", "--gh-token"}, description = "The GitHub API token to use when connecting to the GitHub API", required = true)
+    @CommandLine.Option(names = {"-g", "--gh-token"}, description = "The GitHub API token to use when connecting to the GitHub API", required = true)
     private String githubToken;
 
     @CommandLine.Option(names = {"-c", "--config"}, description = "The config file to load the query to version mappings from", required = true)
@@ -68,7 +67,7 @@ class run implements Callable<Integer> {
             Initialise
          */
         Map<String, String> configuration = loadQueryToVersionMap(pathToConfigFile);
-        final JiraRestClient restClient = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(jiraServerURL), jiraUsername, jiraPassword);
+        final JiraRestClient restClient = new AsynchronousJiraRestClientFactory().create(new URI(jiraServerURL), new BearerHttpAuthenticationHandler(jiraToken));
         GitHub githubClient = new GitHubBuilder().withOAuthToken(githubToken).build();
 
         /*
@@ -115,10 +114,15 @@ class run implements Callable<Integer> {
             if (dryRun) {
                 System.out.println("[DRY RUN] CREATE: '" +  ghIssue.getTitle() + "' FROM " + ghIssue.getHtmlUrl());
             } else {
-                BasicIssue basicIssue =  restClient.getIssueClient().createIssue(issueInput).claim();
+                BasicIssue basicIssue = null;
+                try {
+                    basicIssue = restClient.getIssueClient().createIssue(issueInput).claim();
+                } catch (RestClientException e) {
+                    System.out.println("MAYBE CREATED ISSUE: " + ghIssue.getTitle());
+                    continue;
+                }
                 System.out.println("CREATED ISSUE: " + jiraServerURL + "/browse/" +  basicIssue.getKey());
             }
-
         }
     }
 
@@ -179,11 +183,10 @@ class run implements Callable<Integer> {
 
         try {
             URL urlToCall = new URL(jiraServerURL + "/rest/api/2/project/" + JIRA_PROJECT_CODE + "/versions");
-            String userpass = jiraUsername + ":" + jiraPassword;
-            String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
+            String tokenAuth = "Bearer " + new String(Base64.getEncoder().encode(jiraToken.getBytes()));
 
             URLConnection urlConnection = urlToCall.openConnection();
-            urlConnection.setRequestProperty("Authorization", basicAuth);
+            urlConnection.setRequestProperty("Authorization", tokenAuth);
             InputStream in = urlConnection.getInputStream();
 
             StringWriter writer = new StringWriter();
@@ -202,6 +205,21 @@ class run implements Callable<Integer> {
 
         } catch (IOException e) {
             throw new RuntimeException("Error looking up versions", e);
+        }
+    }
+
+    public static class BearerHttpAuthenticationHandler implements AuthenticationHandler {
+
+        private static final String AUTHORIZATION_HEADER = "Authorization";
+        private final String token;
+
+        public BearerHttpAuthenticationHandler(final String token) {
+            this.token = token;
+        }
+
+        @Override
+        public void configure(Request.Builder builder) {
+            builder.setHeader(AUTHORIZATION_HEADER, "Bearer " + token);
         }
     }
 }
