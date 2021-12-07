@@ -12,9 +12,9 @@ Before you run the script, you should edit the `queries.yaml` file. This configu
 
 Here's an example command line, for running the script:
 
-    jbang run.java --jira-server https://issues.redhat.com -u <JIRA username> -p <JIRA password> -t <GitHub token with read access> -c ./queries.yaml --dryrun
+    jbang run.java --jira-server https://issues.redhat.com -j <JIRA personel access token> -g <GitHub token with read access> -c ./queries.yaml --dryrun
 
-Notice the `--dryrun` option. With this flag set, the script will only log its intentions, but not actually execute the changes.
+Notice the `--dryrun` option. With this flag set, the script will only log its intentions, but not actually execute the changes. I.e it won't create any JIRA issues.
 
 # Local dev
 Load the code in IntelliJ (or your specified IDE) for editing and live reloading dependency changes
@@ -24,8 +24,8 @@ Load the code in IntelliJ (or your specified IDE) for editing and live reloading
 # FAQ
 
 ## I don't want to import using my personal JIRA account, Can I create a service account?
-You can go to https://developer.redhat.com and create a new account, just for use by this script. You might need to login to JIRA initially via the web, before the REST API will accept these new credentials. 
+You can go to https://developer.redhat.com and create a new account, just for use by this script. You will then need to login to JIRA to create a personel access token. 
 
 ## Is the script idempotent?
-Yes. You can run it several times and it will not cause duplicate issues. This is because the 'GH Pull Request'' field is used to detect an existing imported issue.
+Yes. You can run it several times and it will not cause duplicate issues. This is because the 'GH Pull Request'' field is used to detect any existing imported issue.
 
