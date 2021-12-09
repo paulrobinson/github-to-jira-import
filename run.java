@@ -50,6 +50,9 @@ class run implements Callable<Integer> {
     @CommandLine.Option(names = {"-d", "--dryrun"}, description = "Don't actually create issues, just log to the console what the script would have done", required = false)
     private Boolean dryRun = false;
 
+    @CommandLine.Option(names = {"-r", "--rate-limit-delay"}, description = "Basic rate limiting. Specify number of milliseconds to delay between JIRA issue create requests", required = false)
+    private Integer rateLimitDelay = 0;
+
     //TODO: need to infer this, or make it confgurable for other projects to use the script
     private static final String JIRA_PROJECT_CODE = "QUARKUS";
     private static final String JIRA_GIT_PULL_REQUEST_FIELD_ID = "customfield_12310220";
@@ -117,6 +120,12 @@ class run implements Callable<Integer> {
                 BasicIssue basicIssue = null;
                 try {
                     basicIssue = restClient.getIssueClient().createIssue(issueInput).claim();
+
+                    if (rateLimitDelay > 0) {
+                        System.out.println("Waiting for " + rateLimitDelay + "ms to provide basic rate limiting");
+                        Thread.sleep(rateLimitDelay);
+                    }
+
                 } catch (RestClientException e) {
                     System.out.println("MAYBE CREATED ISSUE: " + ghIssue.getTitle());
                     continue;
