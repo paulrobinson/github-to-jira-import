@@ -128,7 +128,9 @@ class run implements Callable<Integer> {
 
                 } catch (RestClientException e) {
                     System.out.println("MAYBE CREATED ISSUE: " + ghIssue.getTitle());
-                    continue;
+                    e.printStackTrace();
+                    System.out.println("Exiting so that you can figure out what went wrong with ^^^");
+                    System.exit(-1);
                 }
                 System.out.println("CREATED ISSUE: " + jiraServerURL + "/browse/" +  basicIssue.getKey());
             }
