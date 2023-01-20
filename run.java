@@ -159,20 +159,24 @@ class run implements Callable<Integer> {
 
     private long getJIRAIssueTypeID(GHIssue issue) throws Exception {
 
+        //See https://issues.redhat.com/rest/api/2/project/QUARKUS for all issue type ids
+
         for (GHLabel label : issue.getLabels()) {
             switch (label.getName()) {
                 case "kind/epic":
-                    return 16; // Epic
+                    return 16; // Epic https://issues.redhat.com/rest/api/2/issuetype/16
                 case "kind/new-feature":
-                    return 2; // Feature Request
+                    return 10700; // Feature https://issues.redhat.com/rest/api/2/issuetype/10700
                 case "kind/bug":
+                    return 1; // Bug https://issues.redhat.com/rest/api/2/issuetype/1
+                case "kind/bug-fix":
                     return 1; // Bug
                 case "kind/question":
-                    return 3; //Task
+                    return 3; //Task https://issues.redhat.com/rest/api/2/issuetype/3
                 case "kind/enhancement":
-                    return 2; // Feature Request
+                    return 10700; // Feature https://issues.redhat.com/rest/api/2/issuetype/10700
                 case "kind/extension-proposal":
-                    return 2; // Feature Request
+                    return 10700; // Feature https://issues.redhat.com/rest/api/2/issuetype/10700
             }
         }
         return 3; //Task
