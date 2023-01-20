@@ -175,7 +175,7 @@ class run implements Callable<Integer> {
                     return 2; // Feature Request
             }
         }
-        return 1; //Bug (Default);  
+        return 3; //Task
     }
 
     private String lookupIssueWithGithubLink(JiraRestClient restClient, String githubLink) {
