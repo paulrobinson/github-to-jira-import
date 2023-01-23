@@ -38,7 +38,7 @@ class run implements Callable<Integer> {
     @CommandLine.Option(names = {"-j", "--jira-token"}, description = "The Personal Access Token for authenticating with the JIRA server", required = true)
     private String jiraToken;
 
-    @CommandLine.Option(names = {"-s", "--jira-server"}, description = "The JIRA server to connect to", required = true)
+    @CommandLine.Option(names = {"-s", "--jira-server"}, description = "The JIRA server to connect to", required = true, defaultValue = "https://issues.redhat.com")
     private String jiraServerURL;
 
     @CommandLine.Option(names = {"-g", "--gh-token"}, description = "The GitHub API token to use when connecting to the GitHub API", required = true)
