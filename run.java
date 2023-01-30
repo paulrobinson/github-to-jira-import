@@ -44,7 +44,7 @@ class run implements Callable<Integer> {
     @CommandLine.Option(names = {"-g", "--gh-token"}, description = "The GitHub API token to use when connecting to the GitHub API", required = true)
     private String githubToken;
 
-    @CommandLine.Option(names = {"-c", "--config"}, description = "The config file to load the query to version mappings from", required = true)
+    @CommandLine.Option(names = {"-c", "--config"}, description = "The config file to load the query to version mappings from", required = true, defaultValue = "queries.yaml")
     private String pathToConfigFile;
 
     @CommandLine.Option(names = {"-d", "--dryrun"}, description = "Don't actually create issues, just log to the console what the script would have done", required = false)
@@ -56,7 +56,6 @@ class run implements Callable<Integer> {
     //TODO: need to infer this, or make it confgurable for other projects to use the script
     private static final String JIRA_PROJECT_CODE = "QUARKUS";
     private static final String JIRA_GIT_PULL_REQUEST_FIELD_ID = "customfield_12310220";
-
 
     public static void main(String... args) {
         int exitCode = new CommandLine(new run()).execute(args);
@@ -183,15 +182,14 @@ class run implements Callable<Integer> {
     }
 
     private String lookupIssueWithGithubLink(JiraRestClient restClient, String githubLink) {
-        SearchResult searchResults = restClient.getSearchClient().searchJql("project = " + JIRA_PROJECT_CODE + " AND issuetype in (Bug, 'Feature Request', Task) AND 'Git Pull Request' ~ '" + githubLink + "'").claim();
+        SearchResult searchResults = restClient.getSearchClient().searchJql("project = " + JIRA_PROJECT_CODE + " AND issuetype in (Bug, 'Feature', Task) AND 'Git Pull Request' ~ '" + githubLink + "'").claim();
 
-        String results = "";
-        Iterator<Issue> iterator = searchResults.getIssues().iterator();
-        while (iterator.hasNext()) {
-            String issueKey = iterator.next().getKey();
-            results += jiraServerURL + "/browse/" +  issueKey + " ";
+        StringBuilder results = new StringBuilder();
+        for (Issue issue : searchResults.getIssues()) {
+            String issueKey = issue.getKey();
+            results.append(jiraServerURL).append("/browse/").append(issueKey).append(" ");
         }
-        return results;
+        return results.toString();
     }
 
     private String lookupVersionId(String versionName) {
