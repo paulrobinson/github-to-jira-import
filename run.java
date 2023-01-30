@@ -182,7 +182,7 @@ class run implements Callable<Integer> {
     }
 
     private String lookupIssueWithGithubLink(JiraRestClient restClient, String githubLink) {
-        SearchResult searchResults = restClient.getSearchClient().searchJql("project = " + JIRA_PROJECT_CODE + " AND issuetype in (Bug, 'Feature', Task) AND 'Git Pull Request' ~ '" + githubLink + "'").claim();
+        SearchResult searchResults = restClient.getSearchClient().searchJql("project = " + JIRA_PROJECT_CODE + " AND 'Git Pull Request' ~ '" + githubLink + "'").claim();
 
         StringBuilder results = new StringBuilder();
         for (Issue issue : searchResults.getIssues()) {
