@@ -44,7 +44,7 @@ class run implements Callable<Integer> {
     @CommandLine.Option(names = {"-g", "--gh-token"}, description = "The GitHub API token to use when connecting to the GitHub API", required = true)
     private String githubToken;
 
-    @CommandLine.Option(names = {"-c", "--config"}, description = "The config file to load the query to version mappings from", required = true, defaultValue = "queries.yaml")
+    @CommandLine.Option(names = {"-c", "--config"}, description = "The config file to load the query to version mappings from", required = true, defaultValue = "queries.json")
     private String pathToConfigFile;
 
     @CommandLine.Option(names = {"-d", "--dryrun"}, description = "Don't actually create issues, just log to the console what the script would have done", required = false)
