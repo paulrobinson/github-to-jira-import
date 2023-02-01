@@ -1,5 +1,5 @@
 //usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS info.picocli:picocli:4.2.0, org.kohsuke:github-api:1.112, com.atlassian.jira:jira-rest-java-client-api:5.2.2, com.atlassian.jira:jira-rest-java-client-app:5.2.2, org.json:json:20200518, com.konghq:unirest-java:3.7.04
+//DEPS info.picocli:picocli:4.2.0, org.kohsuke:github-api:1.112, com.atlassian.jira:jira-rest-java-client-api:5.2.2, com.atlassian.jira:jira-rest-java-client-app:5.2.2, org.json:json:20200518
 
 //REPOS mavencentral,atlassian=https://packages.atlassian.com/maven/repository/public
 
@@ -8,11 +8,9 @@ import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.*;
-import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.atlassian.jira.rest.client.internal.json.JsonParseUtil;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -162,28 +160,26 @@ class run implements Callable<Integer> {
 
         for (GHLabel label : issue.getLabels()) {
             switch (label.getName()) {
-                case "kind/epic":
+                case "kind/epic" -> {
                     return 16; // Epic https://issues.redhat.com/rest/api/2/issuetype/16
-                case "kind/new-feature":
+                }
+                case "kind/new-feature", "kind/enhancement", "kind/extension-proposal" -> {
                     return 10700; // Feature https://issues.redhat.com/rest/api/2/issuetype/10700
-                case "kind/bug":
+                }
+                case "kind/bug", "kind/bug-fix" -> {
                     return 1; // Bug https://issues.redhat.com/rest/api/2/issuetype/1
-                case "kind/bug-fix":
-                    return 1; // Bug
-                case "kind/question":
+                }
+                // Bug
+                case "kind/question" -> {
                     return 3; //Task https://issues.redhat.com/rest/api/2/issuetype/3
-                case "kind/enhancement":
-                    return 10700; // Feature https://issues.redhat.com/rest/api/2/issuetype/10700
-                case "kind/extension-proposal":
-                    return 10700; // Feature https://issues.redhat.com/rest/api/2/issuetype/10700
+                }
             }
         }
-        return 3; //Task
+        return 1; //Bug
     }
 
     private String lookupIssueWithGithubLink(JiraRestClient restClient, String githubLink) {
         SearchResult searchResults = restClient.getSearchClient().searchJql("project = " + JIRA_PROJECT_CODE + " AND 'Git Pull Request' ~ '" + githubLink + "'").claim();
-
         StringBuilder results = new StringBuilder();
         for (Issue issue : searchResults.getIssues()) {
             String issueKey = issue.getKey();
@@ -195,6 +191,7 @@ class run implements Callable<Integer> {
     private String lookupVersionId(String versionName) {
 
         try {
+
             URL urlToCall = new URL(jiraServerURL + "/rest/api/2/project/" + JIRA_PROJECT_CODE + "/versions");
             String tokenAuth = "Bearer " + new String(Base64.getEncoder().encode(jiraToken.getBytes()));
 
