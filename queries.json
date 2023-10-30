@@ -1,6 +1,6 @@
 [
   {
-     "query": "org:quarkusio milestone:2.13.8.Final is:pr",
-     "version": "2.13.8.GA"
+     "query": "org:quarkusio milestone:3.2.7.Final is:pr",
+     "version": "3.2.NEXT"
   }
 ]
